@@ -1,0 +1,28 @@
+# main.cf minimo para el PoC local en Docker Desktop.
+# AJUSTAR myhostname/mydomain antes de usar en un dominio real.
+
+myhostname = mail.poc.local
+mydomain = poc.local
+myorigin = $mydomain
+inet_interfaces = all
+inet_protocols = ipv4
+
+# Para el PoC aceptamos correo para el dominio de prueba y lo dejamos
+# en la cola local (no hay sistema de buzones final todavia).
+mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
+
+# --- Integracion con Rspamd via milter ---
+# Este es el punto clave: Postfix le pasa cada mensaje a Rspamd (puerto 11332,
+# el "worker" tipo milter) antes de aceptarlo/reenviarlo.
+milter_protocol = 6
+milter_default_action = accept
+smtpd_milters = inet:rspamd:11332
+non_smtpd_milters = inet:rspamd:11332
+
+# Buenas practicas basicas
+smtpd_banner = $myhostname ESMTP
+biff = no
+append_dot_mydomain = no
+compatibility_level = 3
+local_recipient_maps =
+maillog_file = /dev/stdout

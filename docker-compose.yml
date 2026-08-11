@@ -1,0 +1,36 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: rspamd-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  rspamd:
+    image: rspamd/rspamd:latest
+    container_name: rspamd
+    restart: unless-stopped
+    depends_on:
+      - redis
+    ports:
+      - "11334:11334"   # Web UI (http://localhost:11334)
+    volumes:
+      - ./rspamd/local.d:/etc/rspamd/local.d:ro
+      - ./rspamd/override.d:/etc/rspamd/override.d:ro
+      - rspamd-data:/var/lib/rspamd
+
+  postfix:
+    build: ./postfix
+    container_name: postfix
+    restart: unless-stopped
+    depends_on:
+      - rspamd
+    ports:
+      - "2525:25"       # SMTP en 2525 local para pruebas (evita permisos del puerto 25)
+    volumes:
+      - postfix-data:/var/spool/postfix
+
+volumes:
+  redis-data:
+  rspamd-data:
+  postfix-data:
